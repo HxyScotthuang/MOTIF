@@ -1,0 +1,6 @@
+torch>=2.1.0
+torch-scatter>=2.1.2
+torch-geometric>=2.4.0
+ninja
+easydict
+pyyaml
