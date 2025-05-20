@@ -1,6 +1,6 @@
 # How Expressive are Knowledge Graph Foundation Models? #
 
-This is the official codebase for [**How Expressive are Knowledge Graph Foundation Models?**](https://www.arxiv.org/abs/2502.13339), which is heavily imported from the code base of [ULTRA](https://github.com/DeepGraphLearning/ULTRA).
+This is the official codebase for [**How Expressive are Knowledge Graph Foundation Models?**](https://www.arxiv.org/abs/2502.13339) (ICML 2025), which is heavily imported from the code base of [ULTRA](https://github.com/DeepGraphLearning/ULTRA).
 
 MOTIF is a knowledge graph foundation model framework capable of equipping with arbitrary motifs for inductive (on nodes and relations) link prediction with knowledge graphs. It leverages [HCNets](https://anonymous.4open.science/r/HCNet) as relation encoders and [NBFNets](https://github.com/KiddoZhu/NBFNet-PyG) as entity encoders.
 
