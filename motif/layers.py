@@ -7,7 +7,7 @@ from torch_geometric.nn.conv import MessagePassing
 from torch_geometric.utils import degree, scatter
 from torch_geometric.utils import scatter
 
-from motif.util import static_positional_encoding, coo_to_csr, preprocess_triton_hypergraph
+from motif.util import static_positional_encoding, coo_to_csr, preprocess_triton_hypergraph_cached
 
 
 class GeneralizedRelationalConv(MessagePassing):
@@ -297,14 +297,14 @@ class HypergraphLayer(nn.Module):
         node_features[:, 0, :] = 0 # Clear the padding node for message agg
 
         if self.use_triton:
-            from .rspmm.triton_rspmm import HyperRelConvSumAggr, HyperRelConvMeanAggr
+            from .rspmm.triton_rspmm import HyperRelConvMeanAggr
+            from .rspmm.triton_hyper_segment import HyperRelConvSumAggrSegmented
             pos_embedding = self.pos_embedding.weight.unsqueeze(1).expand(-1, batch_size, -1).flatten(1) # expand the positional encoding for batch, and compress with the feature size
             relation_vector = self.rel_embedding.weight.unsqueeze(1).expand(-1, batch_size, -1).flatten(1).transpose(0,1) # expand the relation embedding for batch, and compress with the feature size
-            edge_list_trans = edge_list.transpose(0,1)
             node_features_flatten = node_features.transpose(0,1).flatten(1)
-            rowptr, indices, etypes, pos_index, _ = preprocess_triton_hypergraph(edge_list_trans, rel, num_node = node_size)
+            rowptr, indices, etypes, pos_index, _ = preprocess_triton_hypergraph_cached(edge_list, rel, node_size)
             if self.aggregate_func == "sum":
-                out  = HyperRelConvSumAggr.apply(node_features_flatten, rowptr, indices, node_size, etypes, relation_vector, pos_embedding, pos_index, 0)
+                out  = HyperRelConvSumAggrSegmented.apply(node_features_flatten, rowptr, indices, node_size, etypes, relation_vector, pos_embedding, pos_index, 0)
             elif self.aggregate_func == "mean":
                 out  = HyperRelConvMeanAggr.apply(node_features_flatten, rowptr, indices, node_size, etypes, relation_vector, pos_embedding, pos_index, 0)
             else:
