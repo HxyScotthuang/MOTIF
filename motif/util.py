@@ -260,3 +260,18 @@ def preprocess_triton_hypergraph(edge_index, edge_type, num_node):
     assert node_edge_type_degree.stride() == (1, num_rel), f"node_edge_type_degree should have stride (1, num_rels), but have {node_edge_type_degree.stride()} instead"
 
     return rowptr, indices, etypes, pos_index, node_edge_type_degree
+
+
+_triton_hypergraph_cache = {}
+
+
+def preprocess_triton_hypergraph_cached(edge_list, edge_type, num_node):
+    # All hypergraph layers of a forward pass receive the same edge_list / edge_type tensors, so the CSR
+    # preprocessing (sort + coalesce) only needs to run once per forward pass instead of once per layer.
+    # The cache keeps references to its key tensors, so their memory cannot be reused while cached.
+    cached = _triton_hypergraph_cache.get("entry")
+    if cached is None or cached[0] is not edge_list or cached[1] is not edge_type or cached[2] != num_node:
+        cached = (edge_list, edge_type, num_node,
+                  preprocess_triton_hypergraph(edge_list.transpose(0, 1), edge_type, num_node=num_node))
+        _triton_hypergraph_cache["entry"] = cached
+    return cached[3]
